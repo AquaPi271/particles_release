@@ -57,6 +57,13 @@ Like the 2D version but will billboard the particles in 3D.  Camera controls are
 
 Go from easiest to hardest.
 
+Branches from old repo the are the most relevant:
+
+1) basic_3d -- Billboarding implementation with glMatrix.
+2) random_ssclc_supernova -- 2D supernova with color
+3) random_sscl_color -- 2D N-body / solar system with lines, color, collision
+4) remainder are earlier versions
+
 ## Supernova 2D
 
 ## Supernova 3D
