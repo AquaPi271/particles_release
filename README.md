@@ -64,11 +64,11 @@ Branches from old repo the are the most relevant:
 3) random_sscl_color -- 2D N-body / solar system with lines, color, collision
 4) remainder are earlier versions
 
-## Supernova 2D
-
-## Supernova 3D
+## [DONE] Supernova 2D
 
 ## Solar System 2D
+
+## Supernova 3D
 
 ## Solar System 3D
 
