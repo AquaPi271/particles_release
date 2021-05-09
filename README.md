@@ -61,21 +61,22 @@ Like the 2D version but will billboard the particles in 3D.  Camera controls are
 
 ## Solar System 3D
 
-1) Remove lines / tails.
-2) Add generate texture.
-3) Modify shader.
-4) Modify webgl setup.
-5) Add buffers for texture and colors.
-6) Add camera controls.
-7) Add generate buffer data code
+[DONE] 1) Remove lines / tails.
+2) Remove flipped orbit probability as it is meaningless now.
+3) Add generate texture.
+4) Modify shader.
+5) Modify webgl setup.
+6) Add buffers for texture and colors.
+7) Add camera controls.
+8) Add generate buffer data code
    a) use the radius of the particle this time.
    b) use camera transform per point.
-8) Create perspective matrix.
-9) Modify particles for 3 dimensions using glMatrix.
+9) Create perspective matrix.
+10) Modify particles for 3 dimensions using glMatrix.
 
 At this point, test N-body system.
 
-10) For solar system, must modify orbit calculations for 3D.
+11) For solar system, must modify orbit calculations for 3D.
     a) Random direction is vector in tangent plane.
     b) Use sphere / BB method.  Find intersection to this point in tangent plane.
        Create vector from tangent point to this point.  Normalize it.
