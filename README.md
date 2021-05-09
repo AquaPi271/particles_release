@@ -59,7 +59,7 @@ Like the 2D version but will billboard the particles in 3D.  Camera controls are
 
 ## [DONE] Supernova 3D
 
-## Solar System 3D
+## [DONE] Solar System 3D
 
 [DONE] 1) Remove lines / tails.
 [DONE] 2) Remove flipped orbit probability as it is meaningless now.
