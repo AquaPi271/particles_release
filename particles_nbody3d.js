@@ -46,6 +46,8 @@ var max_mass = 0.1;
 var min_radius = 0.001;
 var max_radius = 0.02;
 
+var flipped_orbit_probability = 0.1;
+
 var n_body_min_x = -1.0;
 var n_body_max_x = 1.0;
 var n_body_min_y = -1.0;
@@ -219,6 +221,10 @@ class Particle {
         // TODO: Does not handle 3D yet.
         var line_dir_x = -1.0 * diff_y;
         var line_dir_y = diff_x;
+        if( Math.random() < flipped_orbit_probability ) {
+            line_dir_x *= -1.0;
+            line_dir_y *= -1.0;
+        }
         var vec_length = Math.sqrt((line_dir_x**2) + (line_dir_y**2));
         line_dir_x = line_dir_x / vec_length;
         line_dir_y = line_dir_y / vec_length;
@@ -444,8 +450,14 @@ class ParticleSystem {
         var mass_sum = 0.0;
         var merge_count = merge_list.length * 1.0;
         var vec3_new_position = vec3.fromValues(0.0, 0.0, 0.0);
+        var merge_with_sun = false;
         for( var pi = 0; pi < merge_list.length; ++pi ) {
             var p = merge_list[pi];
+            if( (this.particles[p].color[0] == sun_color[0]) && 
+                (this.particles[p].color[1] == sun_color[1]) && 
+                (this.particles[p].color[2] == sun_color[2]) ) {
+                    merge_with_sun = true;
+            }
             mass_sum += this.particles[p].mass;
             vec3.add( vec3_new_position, vec3_new_position, this.particles[p].vec3_position );
         }
@@ -463,9 +475,14 @@ class ParticleSystem {
         } else {
             radius = Particle.compute_radius(min_mass, max_mass, mass_sum, min_radius, max_radius);
         }
+        var color = particle_color;
+        if( merge_with_sun ) {
+            color = sun_color;
+            radius = sun_radius;
+        }
         var particle = new Particle( vec3_new_position[0], vec3_new_position[1], vec3_new_position[2],  
                                      vec3_new_velocity[0], vec3_new_velocity[1], vec3_new_velocity[2],
-                                     mass_sum, radius, particle_color );
+                                     mass_sum, radius, color );
         return( particle );
     }
 
@@ -733,6 +750,9 @@ function attach_controls() {
     }
     var particle_count_slider = document.getElementById("particle_count_range");
     particle_count = parseInt(particle_count_slider.value);
+
+    var counter_probability_slider = document.getElementById("counter_probability_range");
+    flipped_orbit_probability = parseFloat(counter_probability_slider.value) / 100.0;
 
     var min_eccen_slider = document.getElementById("min_eccen_range");
     min_eccentricity = parseInt(min_eccen_slider.value) * 1.0 / 10.0;
