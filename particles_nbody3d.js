@@ -244,9 +244,11 @@ class Particle {
 class ParticleSystem {
     constructor(
         gl,
-        particle_count
+        particle_count, 
+        particle_texture
     ) {
         this.particle_count = particle_count;
+        this.particle_texture = particle_texture;
         this.gl_vertex_buffer = gl.createBuffer();
         this.gl_vertex_color_buffer = gl.createBuffer();
         this.vertex_buffer = new Float32Array(this.particle_count * 3);
@@ -548,6 +550,64 @@ function render_scene( ) {
     }
 }
 
+function generate_mass_texture( gl ) {
+
+    // Make a simple circle for now.  Possible include gradient later.
+    // Empty spots must be fully transparent.
+
+    var mass_texture = gl.createTexture();
+    var width = 64;   
+    var height = 64;  
+    var data = [];
+    var data2D = new Array(width);
+    var circle_color = [255,255,255,255];
+    
+    for( var y = 0; y < height; ++y ) {
+	    data2D[y] = new Array(height);
+    }
+
+    // Initialize to fully transparent black.
+    
+    for( var y = 0; y < height; ++y ) {
+	    for( var x = 0; x < width; ++x ) {
+	        data2D[x][y] = [0,0,0,0];
+	    }
+    }
+
+    // Draw circle.
+    
+    var mid_y = height / 2.0;
+    var mid_x = width / 2.0;
+
+    for( var y = 0; y < height; ++y ) {
+        for( var x = 0; x < width; ++x ) {
+            var distance_squared = (x - mid_x)**2 + (y - mid_y)**2;
+            if( distance_squared < 32.0 * 32.0 ) {
+                data2D[x][y] = circle_color;
+            }
+        }
+    }
+
+    // Flatten elements into RGBA quads.
+    
+    for( var y = 0; y < height; ++y ) {
+	    for( var x = 0; x < width; ++x ) {
+	        var ele = data2D[x][y];
+	        data.push( ele[0] );
+	        data.push( ele[1] );
+	        data.push( ele[2] );
+	        data.push( ele[3] );
+	    }
+    }
+    var data_typed = new Uint8Array(data);
+    gl.bindTexture(gl.TEXTURE_2D, mass_texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data_typed);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    return( mass_texture );
+}
+
 function attach_controls() {
     var simulation_type_radio = document.getElementsByName("start_condition");
     for( var i = 0; i < simulation_type_radio.length; ++i ) {
@@ -639,13 +699,15 @@ function click_start_button() {
 
     setup_shaders();
 
+    var mass_texture = generate_mass_texture( gl );
+
     if( simulate_n_body ) {
         epsilon = epsilon_n_body;
     } else {
         epsilon = epsilon_solar_system;
     }
 
-    particle_system = new ParticleSystem(gl, particle_count+1);
+    particle_system = new ParticleSystem(gl, particle_count+1, mass_texture);
     if( !simulate_n_body ) {
         particle_system.add_particle( new Particle( 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sun_mass, sun_radius, particle_color ) ); // Sun
     }
