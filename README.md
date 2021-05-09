@@ -68,7 +68,7 @@ Branches from old repo the are the most relevant:
 
 ## Solar System 2D
 
-## Supernova 3D
+## [DONE] Supernova 3D
 
 ## Solar System 3D
 
