@@ -4,8 +4,8 @@ var collision_detection = false;
 var collision_setting;
 var simulate_n_body = true;
 
-var particle_color = [1.0, 1.0, 0.0];
-var particle_tail_color = [1.0, 0.0, 1.0];
+var sun_color = [1.0, 1.0, 0.0];
+var particle_color = [0.0, 1.0, 1.0];
 
 const mode_points = 1;
 const mode_lines = 2;
@@ -28,7 +28,8 @@ var epsilon_solar_system = 0.00000001;
 var g_delta_t_solar_system = 0.00005;  // time step
 
 var sun_mass = 40000.0;
-var sun_radius = 1.0/512.0;
+//var sun_radius = 1.0/512.0;
+var sun_radius = 0.04;
 
 var min_orbital_radius = 0.3;  // anything past 1.0 may not be visible
 var max_orbital_radius = 0.8;
@@ -39,19 +40,24 @@ var max_eccentricity = 1.0;  // > 0
 var min_mass = 0.01;  // too heavy relative to Sun will de-stablize Sun
 var max_mass = 0.1;
 
-var min_radius = 1/512.0;
-var max_radius = 1.001/512.0;
+//var min_radius = 1/512.0;
+//var max_radius = 1.001/512.0;
+
+var min_radius = 0.001;
+var max_radius = 0.02;
 
 var n_body_min_x = -1.0;
 var n_body_max_x = 1.0;
 var n_body_min_y = -1.0;
 var n_body_max_y = 1.0;
+var n_body_min_z = -1.0;
+var n_body_max_z = 1.0;
 var n_body_min_mass = 10.0;
 var n_body_max_mass = 100.0;
 //var n_body_min_radius = 0.001;
 //var n_body_max_radius = 0.001;
-var n_body_min_radius = 1.0/512.0;
-var n_body_max_radius = 1.0/512.0;
+var n_body_min_radius = 0.001;
+var n_body_max_radius = 0.02;
 
 // var n_body_min_x = -0.1;
 // var n_body_max_x = 0.1;
@@ -140,17 +146,10 @@ class Particle {
         color,
         fixed_pos = false
     ) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
         
-        this.vx = vx;
-        this.vy = vy;
-        this.vz = vz;
-
-        this.ax = 0.0;
-        this.ay = 0.0;
-        this.az = 0.0;
+        this.vec3_position = vec3.fromValues( x, y, z );
+        this.vec3_velocity = vec3.fromValues( vx, vy, vz );
+        this.vec3_acceleration = vec3.fromValues( 0.0, 0.0, 0.0 );
 
         this.mass = mass;
         this.fixed_pos = fixed_pos;
@@ -159,24 +158,22 @@ class Particle {
     }
 
     clone( ) {
-        var particle = new Particle(this.x, this.y, this.z, 
-                                    this.vx, this.vy, this.vz, 
+        var particle = new Particle(this.vec3_position[0], this.vec3_position[1], this.vec3_position[2], 
+                                    this.vec3_velocity[0], this.vec3_velocity[1], this.vec3_velocity[2], 
                                     this.mass, this.radius, this.color, this.fixed_pos);
+        particle.vec3_acceleration = vec3.clone(this.vec3_acceleration);
         return( particle );
     }
 
     reset_acceleration( ) {
-        this.ax = 0.0;
-        this.ay = 0.0;
-        this.az = 0.0;
+        vec3.set( this.vec3_acceleration, 0.0, 0.0, 0.0 );
     }
 
     interact( other_particle, bidirectional = true ) {
-        var r2 = (this.x - other_particle.x)**2 + (this.y - other_particle.y)**2 + (this.z - other_particle.z)**2;  
+        var r2 = vec3.squaredDistance( this.vec3_position, other_particle.vec3_position );
         var r = Math.sqrt(r2);
         var collided = (other_particle.radius + this.radius) > r;
         if( collided ) {
-            //console.log( "r1 = " + other_particle.radius);
             if( collision_detection ) {
                 return( true );
             }
@@ -188,29 +185,23 @@ class Particle {
         var rm1 = 1.0/r; 
         var a_this = F / this.mass;
         var a_other_particle = F / other_particle.mass;
-        this.ax += (a_this * (other_particle.x - this.x) * rm1);
-        this.ay += (a_this * (other_particle.y - this.y) * rm1);
-        this.az += (a_this * (other_particle.z - this.z) * rm1);
-        other_particle.ax += (a_other_particle * (this.x - other_particle.x) * rm1);
-        other_particle.ay += (a_other_particle * (this.y - other_particle.y) * rm1);
-        other_particle.az += (a_other_particle * (this.z - other_particle.z) * rm1);
-        //return ( other_particle.radius + this.radius > r ); // return collision boolean
+        var pos_diff_other_to_this = vec3.create();
+        var pos_diff_this_to_other = vec3.create();
+        vec3.sub( pos_diff_other_to_this, other_particle.vec3_position, this.vec3_position );
+        vec3.sub( pos_diff_this_to_other, this.vec3_position, other_particle.vec3_position );
+
+        vec3.scaleAndAdd( this.vec3_acceleration, this.vec3_acceleration, pos_diff_other_to_this, a_this * rm1 );    
+        vec3.scaleAndAdd( other_particle.vec3_acceleration, other_particle.vec3_acceleration, pos_diff_this_to_other, a_other_particle * rm1 );         
+
         return ( false ); // return collision boolean
     }
  
     update( delta_t ) {
         if( !this.fixed_pos ) {
-            this.vx += (this.ax * delta_t);
-            this.vy += (this.ay * delta_t);
-            this.vz += (this.az * delta_t);
-
-            this.x += (this.vx * delta_t);
-            this.y += (this.vy * delta_t);
-            this.z += (this.vz * delta_t);
+            vec3.scaleAndAdd( this.vec3_velocity, this.vec3_velocity, this.vec3_acceleration, delta_t );
+            vec3.scaleAndAdd( this.vec3_position, this.vec3_position, this.vec3_velocity, delta_t );
         }
     }
-
-    
 
     static generate_random_particle(sun_x, sun_y, sun_z, sun_mass, radius_min, radius_max, eccen_min, eccen_max, mass_min, mass_max) {
         var radius = (radius_max-radius_min) * Math.random() + radius_min;
@@ -239,14 +230,15 @@ class Particle {
         return( particle );
     }
 
-    static generate_n_body_particle(min_x, max_x, min_y, max_y, mass_min, mass_max ) {
+    static generate_n_body_particle(min_x, max_x, min_y, max_y, min_z, max_z, mass_min, mass_max ) {
 
         var px   = (max_x - min_x) * Math.random() + min_x;
         var py   = (max_y - min_y) * Math.random() + min_y;
+        var pz   = (max_z - min_z) * Math.random() + min_z;
         var mass   = (mass_max - mass_min) * Math.random() + mass_min;
         var radius = Particle.compute_radius( mass_min, mass_max, mass, n_body_min_radius, n_body_max_radius );
 
-        var particle = new Particle(px, py, 0.0, 0.0, 0.0, 0.0, mass, radius, particle_color );
+        var particle = new Particle(px, py, pz, 0.0, 0.0, 0.0, mass, radius, particle_color );
         return( particle );
     }
 
@@ -292,26 +284,100 @@ class ParticleSystem {
         this.particles.push( particle.clone() );
         return(true);
     }
+
+    update_sprite_vertices_from_point( vec4_point, color, index, uv_index, color_index, particle_radius ) {
+
+        // Make a square from two rectangles and place a Z=0 for now.
     
-    draw(gl) {
-        var index = 0;
-        for( var p = 0; p < this.particles.length; ++p ) {
-            this.vertex_color_buffer[index] = this.particles[p].color[0]; 
-            this.vertex_buffer[index++] = this.particles[p].x;
-            this.vertex_color_buffer[index] = this.particles[p].color[1]; 
-            this.vertex_buffer[index++] = this.particles[p].y;
-            this.vertex_color_buffer[index] = this.particles[p].color[2]; 
-            this.vertex_buffer[index++] = this.particles[p].z;
+        var radius = particle_radius;
+    
+        var UL = vec3.fromValues( -1.0 * radius + vec4_point[0],        radius + vec4_point[1], vec4_point[2] );
+        var UR = vec3.fromValues(        radius + vec4_point[0],        radius + vec4_point[1], vec4_point[2] );
+        var LL = vec3.fromValues( -1.0 * radius + vec4_point[0], -1.0 * radius + vec4_point[1], vec4_point[2] );
+        var LR = vec3.fromValues(        radius + vec4_point[0], -1.0 * radius + vec4_point[1], vec4_point[2] );
+    
+        var UL_uv = vec2.fromValues( 0.0, 1.0 );
+        var UR_uv = vec2.fromValues( 1.0, 1.0 );
+        var LL_uv = vec2.fromValues( 0.0, 0.0 );
+        var LR_uv = vec2.fromValues( 1.0, 0.0 );
+    
+        // First triangle.
+
+        this.sprite_vertex_buffer[index++] = UL[0];  this.sprite_uv_buffer[uv_index++] = UL_uv[0];  
+        this.sprite_vertex_buffer[index++] = UL[1];  this.sprite_uv_buffer[uv_index++] = UL_uv[1];
+        this.sprite_vertex_buffer[index++] = UL[2];
+        this.sprite_vertex_buffer[index++] = UR[0];  this.sprite_uv_buffer[uv_index++] = UR_uv[0];
+        this.sprite_vertex_buffer[index++] = UR[1];  this.sprite_uv_buffer[uv_index++] = UR_uv[1];
+        this.sprite_vertex_buffer[index++] = UR[2];
+        this.sprite_vertex_buffer[index++] = LL[0];  this.sprite_uv_buffer[uv_index++] = LL_uv[0];
+        this.sprite_vertex_buffer[index++] = LL[1];  this.sprite_uv_buffer[uv_index++] = LL_uv[1];
+        this.sprite_vertex_buffer[index++] = LL[2];  
+    
+        // Second triangle.
+        
+        this.sprite_vertex_buffer[index++] = UR[0];  this.sprite_uv_buffer[uv_index++] = UR_uv[0];
+        this.sprite_vertex_buffer[index++] = UR[1];  this.sprite_uv_buffer[uv_index++] = UR_uv[1];
+        this.sprite_vertex_buffer[index++] = UR[2];
+        this.sprite_vertex_buffer[index++] = LR[0];  this.sprite_uv_buffer[uv_index++] = LR_uv[0];
+        this.sprite_vertex_buffer[index++] = LR[1];  this.sprite_uv_buffer[uv_index++] = LR_uv[1];
+        this.sprite_vertex_buffer[index++] = LR[2];
+        this.sprite_vertex_buffer[index++] = LL[0];  this.sprite_uv_buffer[uv_index++] = LL_uv[0];
+        this.sprite_vertex_buffer[index++] = LL[1];  this.sprite_uv_buffer[uv_index++] = LL_uv[1];
+        this.sprite_vertex_buffer[index++] = LL[2];
+    
+        // Color is just repeating pattern.
+
+        for( var c = 0; c < 6; ++c ) {
+            this.sprite_color_buffer[color_index++] = color[0];
+            this.sprite_color_buffer[color_index++] = color[1];
+            this.sprite_color_buffer[color_index++] = color[2];
         }
-        gl.uniform1i(uniform_mode, mode_points);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.gl_vertex_buffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertex_buffer, gl.DYNAMIC_DRAW);
-        gl.vertexAttribPointer(attribute_vertex,3,gl.FLOAT,false,0,0);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.gl_vertex_color_buffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertex_color_buffer, gl.DYNAMIC_DRAW);
-        gl.vertexAttribPointer(attribute_color,3,gl.FLOAT,false,0,0);
-        gl.drawArrays(gl.POINTS,0,this.particles.length);
+        return( [index, uv_index, color_index] );
     }
+
+    draw( gl ) {
+        // Iterate through each particle point and apply camera transform to it to get
+        // camera via.  Create sprite vertices from this location.  Also must add color.
+        // Add texture coordinates.  Draw.
+        var vertex_index = 0;
+        var uv_index = 0;
+        var color_index = 0;
+        var vec4_transformed_point = vec4.create();   
+        var camera_matrix = camera.get_camera_matrix();
+
+        for( var i = 0; i < this.particles.length; ++i ) {
+            var particle = this.particles[i];
+            var vec3_position = particle.vec3_position;
+            
+            vec4.transformMat4( vec4_transformed_point, vec4.fromValues(vec3_position[0], vec3_position[1], vec3_position[2], 1.0), camera_matrix );        
+            var indices = this.update_sprite_vertices_from_point( vec4_transformed_point, particle.color, vertex_index, uv_index, color_index, particle.radius );
+            
+            vertex_index = indices[0];
+            uv_index     = indices[1];
+            color_index  = indices[2];
+        }
+    
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.sprite_texture);
+        gl.uniform1i(uniform_texture, 0);
+    
+        gl.uniformMatrix4fv(uniform_projection_matrix, false, mat4_projection_matrix);
+    
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.sprite_gl_uv_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.sprite_uv_buffer, gl.DYNAMIC_DRAW);
+        gl.vertexAttribPointer(attr_vertex_uv,2,gl.FLOAT,false,0,0);
+    
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.sprite_gl_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.sprite_vertex_buffer, gl.DYNAMIC_DRAW);
+        gl.vertexAttribPointer(attr_vertex_position,3,gl.FLOAT,false,0,0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.sprite_gl_color_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.sprite_color_buffer, gl.DYNAMIC_DRAW);
+        gl.vertexAttribPointer(attr_color,3,gl.FLOAT,false,0,0);
+    
+        gl.drawArrays(gl.TRIANGLES,0,6*this.particles.length);
+    }
+
     update( delta_t ) {
         var collision_dict = {};
         for( var p = 0; p < this.particles.length; ++p ) {
@@ -353,10 +419,10 @@ class ParticleSystem {
             }
 
             this.delete_particles( delete_particle_indices );
+
             for( var m = 0; m < merged_particles.length; ++m ) {
                 this.particles.push( merged_particles[m] );
             }
-            //console.log("count = " + this.particles.length);
         }
 
         // Update positions
@@ -376,32 +442,19 @@ class ParticleSystem {
 
     merge_particles( merge_list ) {
         var mass_sum = 0.0;
-        var pos_x = 0.0;
-        var pos_y = 0.0;
-        var pos_z = 0.0;
-        var vel_x = 0.0;
-        var vel_y = 0.0;
-        var vel_z = 0.0;
         var merge_count = merge_list.length * 1.0;
+        var vec3_new_position = vec3.fromValues(0.0, 0.0, 0.0);
         for( var pi = 0; pi < merge_list.length; ++pi ) {
             var p = merge_list[pi];
             mass_sum += this.particles[p].mass;
-            pos_x += this.particles[p].x;
-            pos_y += this.particles[p].y;
-            pos_z += this.particles[p].z;
+            vec3.add( vec3_new_position, vec3_new_position, this.particles[p].vec3_position );
         }
-        pos_x /= merge_count;
-        pos_y /= merge_count;
-        pos_z /= merge_count;
+        vec3.scale( vec3_new_position, vec3_new_position, 1.0 / merge_count );
+        var vec3_new_velocity = vec3.fromValues(0.0, 0.0, 0.0);
         for( var pi = 0; pi < merge_list.length; ++pi ) {
             var p = merge_list[pi];
             var mass_fraction = this.particles[p].mass/mass_sum;
-            vel_x += (mass_fraction*this.particles[p].vx);
-            vel_y += (mass_fraction*this.particles[p].vy);
-            vel_z += (mass_fraction*this.particles[p].vz);
-            //console.log("vel_x = " + vel_x);
-            //console.log("vel_y = " + vel_y);
-            //console.log("vel_z = " + vel_z);
+            vec3.scaleAndAdd( vec3_new_velocity, vec3_new_velocity, this.particles[p].vec3_velocity, mass_fraction );
         }
 
         var radius = null;
@@ -410,7 +463,9 @@ class ParticleSystem {
         } else {
             radius = Particle.compute_radius(min_mass, max_mass, mass_sum, min_radius, max_radius);
         }
-        var particle = new Particle( pos_x, pos_y, pos_z, vel_x, vel_y, vel_z, mass_sum, radius, particle_color );
+        var particle = new Particle( vec3_new_position[0], vec3_new_position[1], vec3_new_position[2],  
+                                     vec3_new_velocity[0], vec3_new_velocity[1], vec3_new_velocity[2],
+                                     mass_sum, radius, particle_color );
         return( particle );
     }
 
@@ -593,9 +648,10 @@ function setup_shaders() {
 
 function render_scene( ) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.enable(gl.BLEND);
+    gl.depthMask(false);
 
-    gl.viewport(0,0, canvas.width, canvas.height);
-    
     particle_system.update(g_delta_t);
     particle_system.draw(gl);
 
@@ -828,7 +884,7 @@ function click_start_button() {
 
     particle_system = new ParticleSystem(gl, particle_count+1, mass_texture);
     if( !simulate_n_body ) {
-        particle_system.add_particle( new Particle( 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sun_mass, sun_radius, particle_color ) ); // Sun
+        particle_system.add_particle( new Particle( 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sun_mass, sun_radius, sun_color ) ); // Sun
     }
     for( var c = 0; c < particle_count; ++c ) {
         var p = null;
@@ -836,6 +892,7 @@ function click_start_button() {
             p = Particle.generate_n_body_particle(
                 n_body_min_x, n_body_max_x,
                 n_body_min_y, n_body_max_y,
+                n_body_min_z, n_body_max_z,
                 n_body_min_mass, n_body_max_mass );
         } else {
             p = Particle.generate_random_particle(

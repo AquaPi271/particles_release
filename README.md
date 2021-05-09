@@ -69,15 +69,20 @@ Like the 2D version but will billboard the particles in 3D.  Camera controls are
 [DONE] 6) Add camera controls and camera.
 [DONE] 7) Modify shader and attributes.
 [DONE] 8) Add buffers for texture and colors.
-9) Add generate buffer data code
-   a) use the radius of the particle this time.
-   b) use camera transform per point.
-10) Modify particles for 3 dimensions using glMatrix.
+[DONE] 9) Add generate buffer data code
+   [DONE] a) use the radius of the particle this time.
+   [DONE] b) use camera transform per point.
+[DONE] 10) Modify particles for 3 dimensions using glMatrix.
 
-At this point, test N-body system.
+[DONE] At this point, test N-body system.
 
+Possible to try but not necessary:
 11) For solar system, must modify orbit calculations for 3D.
-    a) Random direction is vector in tangent plane.
-    b) Use sphere / BB method.  Find intersection to this point in tangent plane.
-       Create vector from tangent point to this point.  Normalize it.
+    a) Fix up generate_random_particle() with the following:
+       1) Random direction is vector in tangent plane.
+       2) Use sphere / BB method.  Find intersection to this point in tangent plane.
+          Create vector from tangent point to this point.  Normalize it.
+       3) Use glMatrix library.
+
+[DONE] 12) Clean up dead code that has been commented.
 
