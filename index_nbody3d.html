@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Particles</title>
     
-    <link type="text/css" rel="stylesheet" href="particles.css">
+    <link type="text/css" rel="stylesheet" href="particles_nbody3d.css">
 
     <script type="text/javascript" src="gl-matrix.js"></script>
     <script type="text/javascript" src="camera.js"></script>
@@ -12,13 +12,68 @@
   </head>
 
   <body onload="main();">
-    <canvas id="myWebGLCanvas" width="512" height="512"></canvas>
-  <!--  <div id="overlay">
-      <div>Triangles         : <span id="triangles"></span></div>
-      <div>WebGL Render Time : <span id="render_time"></span></div>
-      <div>Processing Time &nbsp : <span id="process_time"></span></div>
-      <div>Total Time &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp : <span id="total_time"></span></div>
+  
+    <div style="width:1200px;">
+      <div style="width:512px; float:left;">
+        <canvas id="myWebGLCanvas" width="512" height="512"></canvas>
+      </div>
+      <div style="width:670px; float:right;">
+        Start Condition: 
+        <input type="radio" name="start_condition" value="solar_system" checked>Solar System
+        <input type="radio" name="start_condition" value="nbody">Random N-Body
+
+        <br>
+        Start Settings:
+
+        <div class="blue">Particle Count</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1.0" max="1000.0" value="100.0" class="slider" id="particle_count_range">
+        </div>
+        <div class="blue">Path Size</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="30" value="15" class="slider" id="path_size_range">
+        </div>
+        <div class="blue">Flipped Orbit Probability</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="0" max="100" value="10" class="slider" id="counter_probability_range">
+        </div>
+        <div class="blue">Min. Orbit Eccentricity</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="10" class="slider" id="min_eccen_range">
+        </div>
+        <div class="blue">Max. Orbit Eccentricity</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="10" class="slider" id="max_eccen_range">
+        </div>
+        <div class="blue">Min. Orbit Radius</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="6" class="slider" id="min_orbit_range">
+        </div>
+        <div class="blue">Max. Orbit Radius</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="16" class="slider" id="max_orbit_range">
+        </div>
+        <button type="button" id="start_button" onclick="click_start_button()">Start Simulation</button>
+        <button type="button" id="end_button" onclick="click_end_button()">End Simulation</button>
+        <br>
+        Runtime Settings:
+        <div class="blue">Universal G - Solar System Setting</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="0.1" max="10.0" value="1.0" class="slider" id="G_solar_range">
+        </div>
+        <div class="blue">Universal G - N-Body Setting</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="0.5" max="30.0" value="10.0" class="slider" id="G_nbody_range">
+        </div>
+        <div class="blue">Delta Time</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="10" class="slider" id="delta_t_range">
+        </div>
+        <input type="checkbox" id="collisions"> Collisions
+        <input type="checkbox" id="paths"> Draw Paths
+      </div>
     </div>
-  -->
+    <div style="clear: both;"></div>
+
   </body>
 </html>

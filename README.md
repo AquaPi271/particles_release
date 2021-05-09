@@ -53,17 +53,6 @@ A "super-nova" will randomly emit particles starting from a circular pattern and
 
 Like the 2D version but will billboard the particles in 3D.  Camera controls are available.  Positioning will be removed (for now).
 
-# TODO:
-
-Go from easiest to hardest.
-
-Branches from old repo the are the most relevant:
-
-1) basic_3d -- Billboarding implementation with glMatrix.
-2) random_ssclc_supernova -- 2D supernova with color
-3) random_sscl_color -- 2D N-body / solar system with lines, color, collision
-4) remainder are earlier versions
-
 ## [DONE] Supernova 2D
 
 ## [DONE] Solar System 2D
@@ -72,4 +61,22 @@ Branches from old repo the are the most relevant:
 
 ## Solar System 3D
 
+1) Remove lines / tails.
+2) Add generate texture.
+3) Modify shader.
+4) Modify webgl setup.
+5) Add buffers for texture and colors.
+6) Add camera controls.
+7) Add generate buffer data code
+   a) use the radius of the particle this time.
+   b) use camera transform per point.
+8) Create perspective matrix.
+9) Modify particles for 3 dimensions using glMatrix.
+
+At this point, test N-body system.
+
+10) For solar system, must modify orbit calculations for 3D.
+    a) Random direction is vector in tangent plane.
+    b) Use sphere / BB method.  Find intersection to this point in tangent plane.
+       Create vector from tangent point to this point.  Normalize it.
 
