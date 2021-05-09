@@ -125,11 +125,15 @@ class ParticleSystemSN {
         this.particles = [];
     }
     add_particle( particle ) {
+        var update_buffer_size = false;
         while( this.particles.length >= this.particle_capacity ) {
             this.particle_capacity *= 2;
+            update_buffer_size = true;
         }
-        this.vertex_buffer = new Float32Array(this.particle_capacity * 3);
-        this.vertex_color_buffer = new Float32Array(this.particle_capacity * 3);
+        if( update_buffer_size ) {
+            this.vertex_buffer = new Float32Array(this.particle_capacity * 3);
+            this.vertex_color_buffer = new Float32Array(this.particle_capacity * 3);
+        }
 
         this.particles.push( particle.clone() );
         return(true);

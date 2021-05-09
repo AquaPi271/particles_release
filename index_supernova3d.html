@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Particles</title>
     
-    <link type="text/css" rel="stylesheet" href="particles.css">
+    <link type="text/css" rel="stylesheet" href="particles_supernova3d.css">
 
     <script type="text/javascript" src="gl-matrix.js"></script>
     <script type="text/javascript" src="camera.js"></script>
@@ -12,13 +12,39 @@
   </head>
 
   <body onload="main();">
-    <canvas id="myWebGLCanvas" width="512" height="512"></canvas>
-  <!--  <div id="overlay">
-      <div>Triangles         : <span id="triangles"></span></div>
-      <div>WebGL Render Time : <span id="render_time"></span></div>
-      <div>Processing Time &nbsp : <span id="process_time"></span></div>
-      <div>Total Time &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp : <span id="total_time"></span></div>
+  
+    <div style="width:1200px;">
+      <div style="width:512px; float:left;">
+        <canvas id="myWebGLCanvas" width="512" height="512"></canvas>
+      </div>
+      <div style="width:670px; float:right;">
+        <div class="blue">Particle Size</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1.0" max="20.0" value="10.0" class="slider" id="particle_size_range">
+        </div>
+        <div class="blue">Shell Emission Probability</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="2" class="slider" id="shell_probability_range">
+        </div>
+        <div class="blue">Particles Per Shell Max.</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="200" value="100" class="slider" id="particle_count_range">
+        </div>
+        <div class="blue">Initial Speed</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="10" class="slider" id="initial_speed_range">
+        </div>
+        <div class="blue">Decceleration</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="10" class="slider" id="acceleration_range">
+        </div>
+        <div class="blue">Delta Time</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="10" class="slider" id="delta_t_range">
+        </div>
+      </div>
     </div>
-  -->
+    <div style="clear: both;"></div>
+
   </body>
 </html>
