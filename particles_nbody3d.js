@@ -60,6 +60,21 @@ var n_body_max_radius = 1.0/512.0;
 // var n_body_min_mass = 10.0;
 // var n_body_max_mass = 100.0;
 
+// Graphics
+
+var canvas = null;
+var gl = null;
+var vec4_clear_color          = vec4.fromValues( 0.0, 0.0, 0.0, 1.0 );  // color for clearing canvas
+var shader_program = null;
+
+// Shader variables
+
+var attr_vertex_position      = null;                                   // attribute to vertex buffer
+var uniform_projection_matrix = null;
+var attr_vertex_uv            = null;
+var uniform_texture           = null;
+var attr_color                = null;
+
 // Projection and camera
 
 var camera                    = null;
@@ -79,15 +94,7 @@ var far_clip_plane_distance   = 10.0;
 
 var particle_system = null;
 
-// Graphics
 
-var canvas = null;
-var gl = null;
-var vec4_clear_color          = vec4.fromValues( 0.0, 0.0, 0.0, 1.0 );  // color for clearing canvas
-var shader_program = null;
-var attribute_vertex = null;
-var attribute_color = null;
-var uniform_mode = null;
 
 //mat4.perspective(projection_matrix, 0.5 * Math.PI, canvas.width/canvas.height, near_clip_plane_distance, far_clip_plane_distance );
 
@@ -264,13 +271,20 @@ class ParticleSystem {
         particle_texture
     ) {
         this.particle_count = particle_count;
-        this.particle_texture = particle_texture;
-        this.gl_vertex_buffer = gl.createBuffer();
-        this.gl_vertex_color_buffer = gl.createBuffer();
-        this.vertex_buffer = new Float32Array(this.particle_count * 3);
-        this.vertex_color_buffer = new Float32Array(this.particle_count * 3);
+
+        this.sprite_gl_buffer       = gl.createBuffer();   // GL buffer object for vertices
+        this.sprite_gl_uv_buffer    = gl.createBuffer();   // GL buffer object for UV coordinates
+        this.sprite_gl_color_buffer = gl.createBuffer();   // GL buffer object for sprite color
+
+        this.sprite_vertex_buffer  = new Float32Array(this.particle_count * 2 * 3 * 3);  // Holds sprite vertices
+        this.sprite_uv_buffer      = new Float32Array(this.particle_count * 2 * 3 * 2);  // Hold sprite texture coordinates
+        this.sprite_color_buffer   = new Float32Array(this.particle_count * 2 * 3 * 3);  // Hold sprite colors to be use
+
         this.particles = [];
+
+        this.sprite_texture = particle_texture;
     }
+
     add_particle( particle ) {
         if( this.particles.length >= this.particle_count ) {
             return(false);
@@ -278,6 +292,7 @@ class ParticleSystem {
         this.particles.push( particle.clone() );
         return(true);
     }
+    
     draw(gl) {
         var index = 0;
         for( var p = 0; p < this.particles.length; ++p ) {
@@ -488,35 +503,48 @@ function setup_webgl() {
     mat4.perspective(mat4_projection_matrix, 0.5 * Math.PI, canvas.width/canvas.height, near_clip_plane_distance, far_clip_plane_distance );
 }
 
-function setup_shaders( ) {
+function setup_shaders() {
 
+    // define vertex shader in essl using es6 template strings
     var vertex_shader_source = `
-        precision mediump float;
-        uniform int mode;
-        attribute vec3 vertex_position;
-        attribute vec3 a_color;
-        varying vec3 v_color;
+        attribute vec3 attr_vertex_position; // vertex position
+        attribute vec2 attr_vertex_uv;       // vertex texture uv
+        attribute vec3 attr_color;           // sprite color
+
+        uniform mat4 uniform_projection_matrix;   // projection matrix only (for billboarding must run camera outside of shader) 
+
+        varying vec2 vary_vertex_uv;         // interpolated uv for frag shader
+        varying vec3 vary_color_rgb;
 
         void main(void) {
-            gl_PointSize = 3.0;
-            gl_Position = vec4(vertex_position,1.0);
-            v_color = a_color;
+    
+            // vertex position
+
+            gl_Position = uniform_projection_matrix * vec4(attr_vertex_position, 1.0);
+
+            // vertex uv
+
+            vary_vertex_uv = attr_vertex_uv;
+
+            // pass color to framgment shader
+
+            vary_color_rgb = attr_color;
         }
     `;
 
+    // define fragment shader in essl using es6 template strings
     var fragment_shader_source = `
-        precision mediump float;
-        uniform int mode;
-        varying lowp vec3 v_color;
-        void main(void) {    
-            if( mode == 1 ) {
-                //gl_FragColor = vec4(0.0,1.0,0.0,1.0);
-                gl_FragColor = vec4(v_color,1.0);
-            } else {
-                //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
-                gl_FragColor = vec4(v_color,1.0);
-            }
-        }
+        precision mediump float; // set float to medium precision
+        
+        // texture properties
+        varying vec3 vary_color_rgb;
+        uniform sampler2D uniform_texture; // the texture for the fragment
+        varying vec2 vary_vertex_uv; // texture uv of fragment
+            
+        void main(void) {
+            vec4 tex_color = texture2D(uniform_texture, vec2(vary_vertex_uv.s, vary_vertex_uv.t));
+            gl_FragColor = tex_color * vec4(vary_color_rgb, 1.0);
+        } // end main
     `;
 
     // Compile and link the shaders.
@@ -545,11 +573,17 @@ function setup_shaders( ) {
         }
 
         gl.useProgram( shader_program );
-        attribute_vertex = gl.getAttribLocation(shader_program, "vertex_position");
-        attribute_color = gl.getAttribLocation(shader_program, "a_color");
-        uniform_mode = gl.getUniformLocation(shader_program, "mode");
-        gl.enableVertexAttribArray(attribute_vertex);
-        gl.enableVertexAttribArray(attribute_color);
+        attr_vertex_position = gl.getAttribLocation(shader_program, "attr_vertex_position");
+        gl.enableVertexAttribArray(attr_vertex_position);
+        attr_vertex_uv = gl.getAttribLocation(shader_program, "attr_vertex_uv");
+        gl.enableVertexAttribArray(attr_vertex_uv);
+        attr_color = gl.getAttribLocation(shader_program, "attr_color");
+        gl.enableVertexAttribArray(attr_color);
+
+        // Get the uniform variables from the shaders
+
+        uniform_projection_matrix = gl.getUniformLocation(shader_program, "uniform_projection_matrix"); 
+        uniform_texture = gl.getUniformLocation(shader_program, "uniform_texture");
     }
 
     catch(e) {
