@@ -42,8 +42,6 @@ var max_mass = 0.1;
 var min_radius = 1/512.0;
 var max_radius = 1.001/512.0;
 
-var flipped_orbit_probability = 0.1;
-
 var n_body_min_x = -1.0;
 var n_body_max_x = 1.0;
 var n_body_min_y = -1.0;
@@ -207,10 +205,6 @@ class Particle {
         // TODO: Does not handle 3D yet.
         var line_dir_x = -1.0 * diff_y;
         var line_dir_y = diff_x;
-        if( Math.random() < flipped_orbit_probability ) {
-            line_dir_x *= -1.0;
-            line_dir_y *= -1.0;
-        }
         var vec_length = Math.sqrt((line_dir_x**2) + (line_dir_y**2));
         line_dir_x = line_dir_x / vec_length;
         line_dir_y = line_dir_y / vec_length;
@@ -567,9 +561,6 @@ function attach_controls() {
     }
     var particle_count_slider = document.getElementById("particle_count_range");
     particle_count = parseInt(particle_count_slider.value);
-
-    //var counter_probability_slider = document.getElementById("counter_probability_range");
-    //flipped_orbit_probability = parseFloat(counter_probability_slider.value) / 100.0;
 
     var min_eccen_slider = document.getElementById("min_eccen_range");
     min_eccentricity = parseInt(min_eccen_slider.value) * 1.0 / 10.0;

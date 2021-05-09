@@ -62,8 +62,8 @@ Like the 2D version but will billboard the particles in 3D.  Camera controls are
 ## Solar System 3D
 
 [DONE] 1) Remove lines / tails.
-2) Remove flipped orbit probability as it is meaningless now.
-3) Add generate texture.
+[DONE] 2) Remove flipped orbit probability as it is meaningless now.
+3) Add generate texture function and parameter to particle system.
 4) Modify shader.
 5) Modify webgl setup.
 6) Add buffers for texture and colors.
