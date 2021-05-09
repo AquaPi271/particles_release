@@ -64,11 +64,11 @@ Like the 2D version but will billboard the particles in 3D.  Camera controls are
 [DONE] 1) Remove lines / tails.
 [DONE] 2) Remove flipped orbit probability as it is meaningless now.
 [DONE] 3) Add generate texture function and parameter to particle system.
-4) Modify webgl setup.
-5) Create perspective matrix.
-6) Modify shader and attributes.
-7) Add buffers for texture and colors.
-8) Add camera controls and camera.
+[DONE] 4) Modify webgl setup.
+[DONE] 5) Create perspective matrix.
+[DONE] 6) Add camera controls and camera.
+7) Modify shader and attributes.
+8) Add buffers for texture and colors.
 9) Add generate buffer data code
    a) use the radius of the particle this time.
    b) use camera transform per point.

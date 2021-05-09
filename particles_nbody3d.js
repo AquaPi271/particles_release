@@ -60,18 +60,34 @@ var n_body_max_radius = 1.0/512.0;
 // var n_body_min_mass = 10.0;
 // var n_body_max_mass = 100.0;
 
+// Projection and camera
+
+var camera                    = null;
+var camera_move_increment     = 0.03;
+var camera_angle_increment    = 6.0;
+
+var camera_start_location     = [0.0, 0.0, 1.0];
+var camera_start_forward      = [0.0, 0.0, -1.0];
+var camera_start_right        = [1.0, 0.0, 0.0];
+var camera_start_up           = [0.0, 1.0, 0.0];
+
+var mat4_projection_matrix    = mat4.create();
+var near_clip_plane_distance  = 0.1;
+var far_clip_plane_distance   = 10.0;
+
+// Global particle system object.
+
 var particle_system = null;
 
 // Graphics
 
 var canvas = null;
 var gl = null;
-var clear_color = [0.0,0.0,0.0,1.0];
+var vec4_clear_color          = vec4.fromValues( 0.0, 0.0, 0.0, 1.0 );  // color for clearing canvas
 var shader_program = null;
 var attribute_vertex = null;
 var attribute_color = null;
 var uniform_mode = null;
-
 
 //mat4.perspective(projection_matrix, 0.5 * Math.PI, canvas.width/canvas.height, near_clip_plane_distance, far_clip_plane_distance );
 
@@ -449,13 +465,17 @@ class ParticleSystem {
 }
 
 function setup_webgl() {
+
+    // Set up keys
+    document.onkeydown = handle_key_down; // call this when key pressed
+
     canvas = document.getElementById("myWebGLCanvas");
     gl = canvas.getContext("webgl");
     try {
         if( gl == null ) {
             throw "unable to get the webgl context from the browser page";
         } else {
-            gl.clearColor( clear_color[0], clear_color[1], clear_color[2], clear_color[3] );
+            gl.clearColor( vec4_clear_color[0], vec4_clear_color[1], vec4_clear_color[2], vec4_clear_color[3] );
             gl.clearDepth( 1.0 );
             gl.enable( gl.DEPTH_TEST );
         }
@@ -464,6 +484,8 @@ function setup_webgl() {
     catch(e) {
         console.log(e);
     }
+
+    mat4.perspective(mat4_projection_matrix, 0.5 * Math.PI, canvas.width/canvas.height, near_clip_plane_distance, far_clip_plane_distance );
 }
 
 function setup_shaders( ) {
@@ -674,6 +696,67 @@ function attach_controls() {
     
 }
 
+function handle_key_down(event) {
+    if( camera == null ) {
+        return;
+    }
+
+    if (!event.shiftKey) {
+        switch (event.code) {
+            case "KeyA":
+                camera.move_right(-1.0*camera_move_increment);  // X-Handedness is backwards
+                break;
+            case "KeyD":
+                camera.move_left(-1.0*camera_move_increment);   // X-Handedness is backwards
+                break;
+            case "KeyS":
+                camera.move_backward(camera_move_increment);
+                break;
+            case "KeyW":
+                camera.move_forward(camera_move_increment);
+                break;
+            case "KeyQ":
+                camera.move_up(camera_move_increment);
+                break;
+            case "KeyE":
+                camera.move_down(camera_move_increment);
+                break;
+            case "ArrowLeft":
+                camera.rotate_left(camera_angle_increment);
+                break;
+            case "ArrowRight":
+                camera.rotate_right(camera_angle_increment);
+                break;
+            case "ArrowDown":
+                camera.move_backward(camera_move_increment);
+                break;
+            case "ArrowUp":
+                camera.move_forward(camera_move_increment);
+                break;
+        }
+    } else if(event.shiftKey) {
+        switch (event.code) {
+            case "KeyA":
+                camera.rotate_left(camera_angle_increment);
+                break;
+            case "KeyD":
+                camera.rotate_right(camera_angle_increment);
+                break;
+            case "KeyS":
+                camera.rotate_backward(camera_angle_increment);
+                break;
+            case "KeyW":
+                camera.rotate_forward(camera_angle_increment);
+                break;
+            case "KeyQ":
+                camera.rotate_clockwise(camera_angle_increment);
+                break;
+            case "KeyE":
+                camera.rotate_counterclockwise(camera_angle_increment);
+                break;
+        }
+    }
+}
 
 function main() {
 
@@ -690,6 +773,8 @@ function click_start_button() {
     }
 
     run_flag = true;
+
+    camera = new Camera(camera_start_location, camera_start_forward, camera_start_up, camera_start_right );
 
     attach_controls();
 
