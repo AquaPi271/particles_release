@@ -31,14 +31,39 @@
         </div>
         <div class="blue">Path Size</div>
         <div class="slidecontainer" style="width:600px">  
-          <input type="range" min="1" max="30" value="5" class="slider" id="path_size_range">
+          <input type="range" min="1" max="30" value="15" class="slider" id="path_size_range">
+        </div>
+        <div class="blue">Flipped Orbit Probability</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="0" max="100" value="10" class="slider" id="counter_probability_range">
+        </div>
+        <div class="blue">Min. Orbit Eccentricity</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="10" class="slider" id="min_eccen_range">
+        </div>
+        <div class="blue">Max. Orbit Eccentricity</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="10" class="slider" id="max_eccen_range">
+        </div>
+        <div class="blue">Min. Orbit Radius</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="6" class="slider" id="min_orbit_range">
+        </div>
+        <div class="blue">Max. Orbit Radius</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="1" max="20" value="16" class="slider" id="max_orbit_range">
         </div>
         <button type="button" id="start_button" onclick="click_start_button()">Start Simulation</button>
+        <button type="button" id="end_button" onclick="click_end_button()">End Simulation</button>
         <br>
         Runtime Settings:
-        <div class="blue">Universal G</div>
+        <div class="blue">Universal G - Solar System Setting</div>
         <div class="slidecontainer" style="width:600px">  
-          <input type="range" min="0.1" max="30.0" value="1.0" class="slider" id="G_range">
+          <input type="range" min="0.1" max="10.0" value="1.0" class="slider" id="G_solar_range">
+        </div>
+        <div class="blue">Universal G - N-Body Setting</div>
+        <div class="slidecontainer" style="width:600px">  
+          <input type="range" min="0.5" max="30.0" value="10.0" class="slider" id="G_nbody_range">
         </div>
         <div class="blue">Delta Time</div>
         <div class="slidecontainer" style="width:600px">  

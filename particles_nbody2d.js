@@ -1,3 +1,5 @@
+var run_flag = false;
+
 var collision_detection = false;
 var collision_setting;
 var simulate_n_body = true;
@@ -295,6 +297,12 @@ class Particle {
     }
 
     static compute_radius( mass_min, mass_max, mass, min_radius, max_radius ) {
+        if( mass > mass_max ) {
+            mass = mass_max;
+        }
+        if( mass < mass_min ) {
+            mass = mass_min;
+        }
         var m = (max_radius - min_radius) / (mass_max - mass_min);
         var r = m * (mass - mass_min) + min_radius;
         return( r );
@@ -639,7 +647,9 @@ function render_scene( ) {
     collision_detection = collision_setting;
     add_lines = add_lines_setting;
 
-    window.requestAnimationFrame(render_scene);
+    if( run_flag ) {
+        window.requestAnimationFrame(render_scene);
+    }
 }
 
 function attach_controls() {
@@ -659,11 +669,48 @@ function attach_controls() {
     var path_size_slider = document.getElementById("path_size_range");
     path_size_count = parseInt(path_size_slider.value);
 
-    var g_slider = document.getElementById("G_range");
-    G = g_slider.value * 1.0;
-    g_slider.oninput = function() {
-        G = this.value * 1.0;
+    var counter_probability_slider = document.getElementById("counter_probability_range");
+    flipped_orbit_probability = parseFloat(counter_probability_slider.value) / 100.0;
+
+    var min_eccen_slider = document.getElementById("min_eccen_range");
+    min_eccentricity = parseInt(min_eccen_slider.value) * 1.0 / 10.0;
+
+    var max_eccen_slider = document.getElementById("max_eccen_range");
+    max_eccentricity = parseInt(max_eccen_slider.value) * 1.0 / 10.0;
+
+    if( max_eccentricity < min_eccentricity ) {
+        max_eccentricity = min_eccentricity;
+    }  
+    
+    var min_orbit_slider = document.getElementById("min_orbit_range");
+    min_orbital_radius = parseInt(min_orbit_slider.value) * 1.0 / 20.0;
+
+    var max_orbit_slider = document.getElementById("max_orbit_range");
+    max_orbital_radius = parseInt(max_orbit_slider.value) * 1.0 / 20.0;
+
+    if( max_orbital_radius < min_orbital_radius ) {
+        max_orbital_radius = min_orbital_radius;
+    } 
+
+    var g_solar_slider = document.getElementById("G_solar_range");
+    if( !simulate_n_body ) {
+        G = g_solar_slider.value * 1.0;
     }
+    g_solar_slider.oninput = function() {
+        if( !simulate_n_body ) {
+            G = this.value * 1.0;
+        }
+    }
+    var g_nbody_slider = document.getElementById("G_nbody_range");
+    if( simulate_n_body ) {
+        G = g_nbody_slider.value * 1.0;
+    }
+    g_nbody_slider.oninput = function() {
+        if( simulate_n_body ) {
+            G = this.value * 1.0;
+        }
+    }
+
     var delta_t_slider = document.getElementById("delta_t_range");
     g_delta_t = 0.00005 * delta_t_slider.value / 10.0;
     delta_t_slider.oninput = function() {
@@ -687,7 +734,17 @@ function main() {
 
 }
 
+function click_end_button() {
+    run_flag = false;
+}
+
 function click_start_button() {
+
+    if( run_flag ) {
+        return;
+    }
+
+    run_flag = true;
 
     attach_controls();
 
