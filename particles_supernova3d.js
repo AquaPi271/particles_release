@@ -124,15 +124,12 @@ class ParticleSystemSN {
     ) {
         this.particle_capacity      = particle_capacity;
         this.sprite_gl_buffer       = gl.createBuffer();   // GL buffer object for vertices
-        this.sprite_vertex_buffer   = gl.createBuffer();   // Holds sprite vertices
         this.sprite_gl_uv_buffer    = gl.createBuffer();   // GL buffer object for UV coordinates
-        this.sprite_uv_buffer       = gl.createBuffer();   // Hold sprite texture coordinates
         this.sprite_gl_color_buffer = gl.createBuffer();   // GL buffer object for sprite color
-        this.sprite_color_buffer    = gl.createBuffer();   // Hold sprite colors to be use
 
-        this.sprite_vertex_buffer  = new Float32Array(this.particle_capacity * 2 * 3 * 3);
-        this.sprite_uv_buffer      = new Float32Array(this.particle_capacity * 2 * 3 * 2);
-        this.sprite_color_buffer   = new Float32Array(this.particle_capacity * 2 * 3 * 3);
+        this.sprite_vertex_buffer  = new Float32Array(this.particle_capacity * 2 * 3 * 3);  // Holds sprite vertices
+        this.sprite_uv_buffer      = new Float32Array(this.particle_capacity * 2 * 3 * 2);  // Hold sprite texture coordinates
+        this.sprite_color_buffer   = new Float32Array(this.particle_capacity * 2 * 3 * 3);  // Hold sprite colors to be use
 
         this.particles = [];
 
